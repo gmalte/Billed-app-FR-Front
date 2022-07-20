@@ -1,16 +1,15 @@
-import VerticalLayout from './VerticalLayout.js'
-import ErrorPage from "./ErrorPage.js"
-import LoadingPage from "./LoadingPage.js"
-import { formatDate } from '../app/format.js'
+import VerticalLayout from '../views/VerticalLayout.js'
+import ErrorPage from "../views/ErrorPage.js"
+import LoadingPage from "../views/LoadingPage.js"
 
-import Actions from './Actions.js'
+import Actions from '../views/Actions.js'
 
 export const row = (bill) => {
   return (`
     <tr>
       <td>${bill.type}</td>
       <td>${bill.name}</td>
-      <td>${formatDate(bill.date)}</td>
+      <td>${bill.date}</td>
       <td>${bill.amount} €</td>
       <td>${bill.status}</td>
       <td>

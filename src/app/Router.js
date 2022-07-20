@@ -13,8 +13,17 @@ export default () => {
   const rootDiv = document.getElementById('root')
   rootDiv.innerHTML = ROUTES({ pathname: window.location.pathname })
 
+  /*
+    The onNavigate function is global with the use of window
+    Why pass it to Login, Bills, etc... ?
+  */
   window.onNavigate = (pathname) => {
-
+    /*
+    Update window.location =>
+    - the browser URL bar is updated
+    - when the user navigates back in Bills and Dashboard, the URL is not modified (see onpopstate block)
+    - when the user reloads the page (see last checks of this module), window.location is used
+    */
     window.history.pushState(
       {},
       pathname,
@@ -30,14 +39,14 @@ export default () => {
       const divIcon2 = document.getElementById('layout-icon2')
       divIcon1.classList.add('active-icon')
       divIcon2.classList.remove('active-icon')
-      const bills = new Bills({ document, onNavigate, store, localStorage  })
+      const bills = new Bills({ document, onNavigate, store, localStorage  }) // 1st "new Bills" for getBills()
       bills.getBills().then(data => {
-        rootDiv.innerHTML = BillsUI({ data })
+        rootDiv.innerHTML = BillsUI({ data }) // returns BillsUI with bills from getBills()
         const divIcon1 = document.getElementById('layout-icon1')
         const divIcon2 = document.getElementById('layout-icon2')
         divIcon1.classList.add('active-icon')
         divIcon2.classList.remove('active-icon')
-        new Bills({ document, onNavigate, store, localStorage })
+        new Bills({ document, onNavigate, store, localStorage }) // 2nd "new Bills" to add EventListeners to BillsUI
       }).catch(error => {
         rootDiv.innerHTML = ROUTES({ pathname, error })
       })
@@ -60,19 +69,20 @@ export default () => {
     }
   }
 
-  window.onpopstate = (e) => {
+  window.onpopstate = (e) => { // Executed when the user navigate back
     const user = JSON.parse(localStorage.getItem('user'))
     if (window.location.pathname === "/" && !user) {
       document.body.style.backgroundColor="#0E5AE5"
       rootDiv.innerHTML = ROUTES({ pathname: window.location.pathname })
     }
     else if (user) {
-      onNavigate(PREVIOUS_LOCATION)
+      onNavigate(PREVIOUS_LOCATION) // PREVIOUS_LOCATION updated by Login with Bills or Dashboard path
     }
   }
 
+  // Executed when user first loads index.html (first case) or when he reloads the page (other cases)
   if (window.location.pathname === "/" && window.location.hash === "") {
-    new Login({ document, localStorage, onNavigate, PREVIOUS_LOCATION, store })
+    new Login({ document, localStorage, PREVIOUS_LOCATION, store })
     document.body.style.backgroundColor="#0E5AE5"
   } else if (window.location.hash !== "") {
     if (window.location.hash === ROUTES_PATH['Bills']) {

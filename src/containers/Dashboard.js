@@ -76,8 +76,6 @@ export default class {
     $('#arrow-icon2').click((e) => this.handleShowTickets(e, bills, 2))
     $('#arrow-icon3').click((e) => this.handleShowTickets(e, bills, 3))
     new Logout({ localStorage, onNavigate })
-    // MyModif
-    this.billsInitialized = false
   }
 
   handleClickIconEye = () => {
@@ -88,9 +86,6 @@ export default class {
   }
 
   handleEditTicket(e, bill, bills) {
-    console.log('handleEditTicket')
-    console.log(bill)
-    console.log(bills)
     if (this.counter === undefined || this.id !== bill.id) this.counter = 0
     if (this.id === undefined || this.id !== bill.id) this.id = bill.id
     if (this.counter % 2 === 0) {
@@ -136,9 +131,6 @@ export default class {
   }
 
   handleShowTickets(e, bills, index) {
-    /*console.log('handleShowTickets')
-    console.log(bills)
-    console.log(index)*/
     if (this.counter === undefined || this.index !== index) this.counter = 0
     if (this.index === undefined || this.index !== index) this.index = index
     if (this.counter % 2 === 0) {
@@ -153,13 +145,11 @@ export default class {
       this.counter ++
     }
 
-    if (!this.billsInitialized) {
-      bills.forEach(bill => {
-        console.log(bill)
+    bills.forEach(bill => {
+      if ((index === 1 && bill.status === 'pending') || (index === 2 && bill.status === 'accepted') || (index === 3 && bill.status === 'refused')) {
         $(`#open-bill${bill.id}`).click((e) => this.handleEditTicket(e, bill, bills))
-      })
-      this.billsInitialized = true
-    }
+      }
+    })
 
     return bills
   }

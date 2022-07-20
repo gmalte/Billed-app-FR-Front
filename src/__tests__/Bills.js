@@ -2,19 +2,29 @@
  * @jest-environment jsdom
  */
 
+import { screen, waitFor} from "@testing-library/dom"
+import userEvent from '@testing-library/user-event'
+import { ROUTES, ROUTES_PATH } from "../constants/routes"
+import { localStorageMock } from "../__mocks__/localStorage.js"
+import mockStore from "../__mocks__/store"
+import { bills } from "../__fixtures__/bills"
+import router from "../app/Router"
 import BillsUI from "../views/BillsUI.js"
+import mockBillsUI from "../__mocks__/BillsUI.js"
 import Bills from "../containers/Bills.js";
-import { bills } from "../fixtures/bills.js"
-import { ROUTES_PATH} from "../constants/routes.js";
-import {localStorageMock} from "../__mocks__/localStorage.js";
 import { formatDate } from '../app/format.js'
 
-import {screen, waitFor} from "@testing-library/dom"
-import userEvent from '@testing-library/user-event'
-
-import router from "../app/Router.js";
+jest.mock("../app/store", () => mockStore)
  
 describe("When I am on Bills Page", () => {
+  test("Then bills should be ordered from earliest to latest", () => {
+    // mockBillsUI used so that the dates are note formatted when displayed
+    document.body.innerHTML = mockBillsUI({ data: bills })
+    const dates = screen.getAllByText(/^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$/i).map(a => a.innerHTML)
+    const antiChrono = (a, b) => ((a > b) ? 1 : -1)
+    const datesSorted = [...dates].sort(antiChrono)
+    expect(dates).toEqual(datesSorted)
+  })
   test("Then bill icon in vertical layout should be highlighted", async () => {
     Object.defineProperty(window, 'localStorage', { value: localStorageMock })
     window.localStorage.setItem('user', JSON.stringify({
@@ -28,19 +38,8 @@ describe("When I am on Bills Page", () => {
     await waitFor(() => screen.getByTestId('icon-window'))
     const windowIcon = screen.getByTestId('icon-window')
     expect(windowIcon.classList.contains('active-icon')).toBe(true)
-
   })
-  test("Then bills should be ordered from earliest to latest", () => {
-    const orderedBills = [...bills].sort(function(a,b){ // [...bills] used so that bills is not modified
-      return new Date(a.date) - new Date(b.date);
-    });
-    var dates = orderedBills.map(function(bill) { return formatDate(bill["date"]) });
-
-    document.body.innerHTML = BillsUI({ data: bills })
-    const UiDates = screen.getAllByText(/^\d.*\d$/).map(a => a.innerHTML)
-
-    expect(UiDates).toEqual(dates)
-  })
+  
   describe('When I am on Bills page but it is loading', () => {
     test('Then, Loading page should be rendered', () => {
       document.body.innerHTML = BillsUI({ loading: true })
@@ -75,6 +74,98 @@ describe("When I am on Bills Page", () => {
 
       expect(handleClickIconEye).toHaveBeenCalled();
       expect(document.getElementById('modaleFile')).toBeTruthy   
+    })
+  })
+  describe('When I am on Bills page and I click on NewBill', () => {
+    test('Then, it should render NewBill page', () => {
+      document.body.innerHTML = BillsUI({ data: [] })
+
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname })
+      }
+      new Bills({ document, onNavigate })
+  
+      const newBillBtn = screen.getByTestId("btn-new-bill")
+      userEvent.click(newBillBtn)
+  
+      expect(screen.getByTestId("form-new-bill")).toBeTruthy()
+    })
+  })
+})
+
+// test d'intégration GET
+describe("Given I am a user connected as Employee", () => {
+  describe("When I navigate to Bills", () => {
+    test("fetches bills from mock API GET", async () => {
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee'
+      }))
+
+      const root = document.createElement("div")
+      root.setAttribute("id", "root")
+      document.body.append(root)
+
+      // Make the onNavigate function available
+      router()
+
+      // jest.mock("../app/store", () => mockStore) declared at the beginning of this module
+      //    It will be mockStore which will be used to get bills
+      onNavigate(ROUTES_PATH.Bills)
+
+      const lastBill = await waitFor(() => screen.getByText('test2'))
+      expect(lastBill).toBeTruthy()
+    })
+  })
+
+  describe("When an error occurs on API", () => {
+    beforeEach(() => {
+      // Allow with mockImplementationOnce to mock the list function
+      jest.spyOn(mockStore, "bills")
+      
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: "a@a"
+      }))
+
+      const root = document.createElement("div")
+      root.setAttribute("id", "root")
+      document.body.appendChild(root)
+
+      router()
+    })
+    test("fetches bills from an API and fails with 404 message error", async () => {
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          list : () =>  {
+            return Promise.reject(new Error("Erreur 404"))
+          }
+        }})
+      onNavigate(ROUTES_PATH.Bills)
+      // Ensure asynchronous actions are resolved before running assertions during tests
+      await new Promise(process.nextTick);
+      const message = await screen.getByText(/Erreur 404/)
+      expect(message).toBeTruthy()
+    })
+
+    test("fetches messages from an API and fails with 500 message error", async () => {
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          list : () =>  {
+            return Promise.reject(new Error("Erreur 500"))
+          }
+        }
+      })
+      /*
+      Call getBills() (router.js) => list() (bills.js) => return Promise.reject => 
+      catch(error => { (router.js)
+        rootDiv.innerHTML = ROUTES({ pathname, error })
+      */
+      onNavigate(ROUTES_PATH.Bills)
+      await new Promise(process.nextTick);
+      const message = await screen.getByText(/Erreur 500/)
+      expect(message).toBeTruthy()
     })
   })
 })

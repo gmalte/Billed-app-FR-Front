@@ -1,6 +1,6 @@
 import { ROUTES_PATH } from '../constants/routes.js'
 import Logout from "./Logout.js"
-
+import BillsUI from "../views/BillsUI.js"
 export default class NewBill {
   constructor({ document, onNavigate, store, localStorage }) {
     this.document = document
@@ -18,35 +18,47 @@ export default class NewBill {
   handleChangeFile = e => {
     e.preventDefault()
     const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
-    const filePath = e.target.value.split(/\\/g)
-    const fileName = filePath[filePath.length-1]
+    // MyModif
+    // filePath & so fileName can't be used with jest it seems => file.name used
+    //const filePath = e.target.value.split(/\\/g)
+    //const fileName = filePath[filePath.length-1]
     const formData = new FormData()
     const email = JSON.parse(localStorage.getItem("user")).email
     formData.append('file', file)
     formData.append('email', email)
-    console.log(fileName)
-
-    this.store
-      .bills()
-      .create({
-        data: formData,
-        headers: {
-          noContentType: true
-        }
-      })
-      .then(({fileUrl, key}) => {
-        console.log(fileUrl)
-        this.billId = key
-        this.fileUrl = fileUrl
-        this.fileName = fileName
-      }).catch(error => console.error(error))
+    // MyModif
+    if (!file.name.includes('png') && !file.name.includes('jpg') && !file.name.includes('jpeg')) {
+      const $invalid = this.document.querySelector('.invalid-feedback')
+      if ($invalid !== null) {
+        $invalid.classList.remove('invalid-feedback')
+        $invalid.classList.add('text-danger')
+        this.fileName = null
+      }
+    } else {
+      const $textDanger = this.document.querySelector('.text-danger')
+      if ($textDanger !== null) {
+        $textDanger.classList.remove('text-danger')
+        $textDanger.classList.add('invalid-feedback')
+      }
+      this.store
+        .bills()
+        .create({
+          data: formData,
+          headers: {
+            noContentType: true
+          }
+        })
+        .then(({fileUrl, key}) => {
+          this.billId = key
+          this.fileUrl = fileUrl
+          this.fileName = file.name
+        }).catch(error => console.error(error))
+    }
   }
   handleSubmit = e => {
     e.preventDefault()
     // MyModif
-    if (!this.fileName.includes('png') && !this.fileName.includes('jpg') && !this.fileName.includes('jpeg')) {
-      console.log('file must be jpeg, jpg or png')
-    } else {
+    if (this.fileName != null) {
       console.log('e.target.querySelector(`input[data-testid="datepicker"]`).value', e.target.querySelector(`input[data-testid="datepicker"]`).value)
       const email = JSON.parse(localStorage.getItem("user")).email
       const bill = {
