@@ -15,7 +15,6 @@ export default () => {
 
   /*
     The onNavigate function is global with the use of window
-    Why pass it to Login, Bills, etc... ?
   */
   window.onNavigate = (pathname) => {
     /*
@@ -82,7 +81,7 @@ export default () => {
 
   // Executed when user first loads index.html (first case) or when he reloads the page (other cases)
   if (window.location.pathname === "/" && window.location.hash === "") {
-    new Login({ document, localStorage, PREVIOUS_LOCATION, store })
+    new Login({ document, localStorage, onNavigate, PREVIOUS_LOCATION, store })
     document.body.style.backgroundColor="#0E5AE5"
   } else if (window.location.hash !== "") {
     if (window.location.hash === ROUTES_PATH['Bills']) {

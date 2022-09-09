@@ -1,5 +1,6 @@
 node_modules
 coverage
-.idea
 notes
 src/__tests__/0test.js
+test.html
+test.js

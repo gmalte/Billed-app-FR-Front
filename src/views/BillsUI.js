@@ -22,9 +22,11 @@ export const row = (bill) => {
 
 const rows = (data) => {
   // MyModif
-  data = data.sort(function(a,b){
-    return new Date(a.date) - new Date(b.date);
-  });
+  if (data) {
+    data = data.sort(function(a,b){
+      return new Date(a.date) - new Date(b.date);
+    });
+  }
   return (data && data.length) ? data.map(bill => row(bill)).join("") : ""
 }
 
