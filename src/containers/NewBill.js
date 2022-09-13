@@ -19,14 +19,14 @@ export default class NewBill {
     e.preventDefault()
     const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
     // MyModif
-    // filePath & so fileName can't be used with jest it seems => file.name used
+    // filePath & then fileName can't be used with jest it seems => file.name used
     //const filePath = e.target.value.split(/\\/g)
     //const fileName = filePath[filePath.length-1]
     const formData = new FormData()
     const email = JSON.parse(localStorage.getItem("user")).email
     formData.append('file', file)
     formData.append('email', email)
-    // MyModif
+    // MyModif so that create is executed only if file is in the right format
     if (!file.name.includes('png') && !file.name.includes('jpg') && !file.name.includes('jpeg')) {
       const $invalid = this.document.querySelector('.invalid-feedback')
       if ($invalid !== null) {

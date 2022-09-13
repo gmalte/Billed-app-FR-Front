@@ -11,8 +11,7 @@ import { bills } from "../__fixtures__/bills"
 import router from "../app/Router"
 import BillsUI from "../views/BillsUI.js"
 import mockBillsUI from "../__mocks__/BillsUI.js"
-import Bills from "../containers/Bills.js";
-import { formatDate } from '../app/format.js'
+import Bills from "../containers/Bills.js"
 
 jest.mock("../app/store", () => mockStore)
  
@@ -52,7 +51,7 @@ describe("When I am on Bills Page", () => {
       expect(screen.getAllByText('Erreur')).toBeTruthy()
     })
   })
-  describe('When I am on Bills page and I click on a eye icon', () => {
+  describe('When I am on Bills page and I click on one of the eye icons', () => {
     test('Then, a modal should open', () => {
       document.body.innerHTML = BillsUI({ data: bills })
 
@@ -61,13 +60,13 @@ describe("When I am on Bills Page", () => {
       const iconEye = screen.getAllByTestId("icon-eye")[0]
 
       /*
-      Without "$.fn.modal = jest.fn()", jest returns "TypeError: $(...).modal is not a function"
+      Without "$.fn.modal = jest.fn()", a "TypeError: $(...).modal is not a function" error is returned
         https://stackoverflow.com/questions/45225235/accessing-bootstrap-functionality-in-jest-testing
         https://codehunter.cc/a/reactjs/reactjs-jest-jquery-is-not-defined
       Bills handleClickIconEye function uses jquery...
       */
       $.fn.modal = jest.fn(); 
-      const handleClickIconEye = jest.fn(() => billsInstance.handleClickIconEye(iconEye)) // To use toHaveBeenCalled
+      const handleClickIconEye = jest.fn(() => billsInstance.handleClickIconEye(iconEye))
 
       iconEye.addEventListener('click', handleClickIconEye)
       userEvent.click(iconEye)
@@ -157,11 +156,7 @@ describe("Given I am a user connected as Employee", () => {
           }
         }
       })
-      /*
-      Call getBills() (router.js) => list() (bills.js) => return Promise.reject => 
-      catch(error => { (router.js)
-        rootDiv.innerHTML = ROUTES({ pathname, error })
-      */
+
       onNavigate(ROUTES_PATH.Bills)
       await new Promise(process.nextTick);
       const message = await screen.getByText(/Erreur 500/)
@@ -169,4 +164,3 @@ describe("Given I am a user connected as Employee", () => {
     })
   })
 })
-

@@ -34,23 +34,30 @@ export default class {
       .list()
       .then(snapshot => {
         const bills = snapshot
+          .sort(function(a,b) {
+            return new Date(a.date) - new Date(b.date);
+          })
           .map(doc => {
-            try {
+            //New: date now formatted in BillsUI
+            //try/catch in formatDate instead so that BillsUI has no check to do
+            //try {
               return {
                 ...doc,
-                //date: formatDate(doc.date), MyModif
+                // New: date now formatted in BillsUI
+                //date: formatDate(doc.date),
                 status: formatStatus(doc.status)
               }
-            } catch(e) {
+            /*} catch(e) {
+              console.log(e)
               // if for some reason, corrupted data was introduced, we manage here failing formatDate function
               // log the error and return unformatted date in that case
               console.log(e,'for',doc)
               return {
                 ...doc,
-                date: doc.date,
+                //date: doc.date,
                 status: formatStatus(doc.status)
               }
-            }
+            }*/
           })
           console.log('length', bills.length)
         return bills

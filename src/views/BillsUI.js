@@ -2,7 +2,6 @@ import VerticalLayout from './VerticalLayout.js'
 import ErrorPage from "./ErrorPage.js"
 import LoadingPage from "./LoadingPage.js"
 import { formatDate } from '../app/format.js'
-
 import Actions from './Actions.js'
 
 export const row = (bill) => {
@@ -23,7 +22,7 @@ export const row = (bill) => {
 const rows = (data) => {
   // MyModif
   if (data) {
-    data = data.sort(function(a,b){
+    data = data.sort(function(a,b) {
       return new Date(a.date) - new Date(b.date);
     });
   }
